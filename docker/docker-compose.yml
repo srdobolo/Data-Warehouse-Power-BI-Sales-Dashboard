@@ -1,0 +1,47 @@
+services:
+  mssql:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: banking_mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${MSSQL_PASSWORD}
+      - MSSQL_TCP_PORT=1433
+      - MSSQL_ENCRYPTION=Optional
+    ports:
+      - "${MSSQL_PORT}:1433"
+    volumes:
+      - ../sql:/sql
+      - mssql_data:/var/opt/mssql
+
+  loader:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.loader
+    container_name: banking_loader
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    volumes:
+      - ../etl:/app/etl
+      - ../data:/app/data
+      - ../sql:/app/sql
+    entrypoint: /bin/bash -c "while true; do sleep 3600; done"
+    environment:
+      MSSQL_HOST: ${MSSQL_HOST}
+      MSSQL_USER: ${MSSQL_USER}
+      MSSQL_PASSWORD: ${MSSQL_PASSWORD}
+      MSSQL_DB: ${MSSQL_DB}
+      MSSQL_PORT: ${MSSQL_PORT}
+      DATA_PATH: ${DATA_PATH}
+      EXCEL_FILE: ${EXCEL_FILE}
+      PYTHONUNBUFFERED: ${PYTHONUNBUFFERED}
+      TZ: ${TZ}
+    depends_on:
+      - mssql
+
+
+volumes:
+  mssql_data:

@@ -49,21 +49,46 @@ CREATE TABLE dw.DIM_CLIENTE (
     data_registo  DATE         NULL
 );
 
-INSERT INTO dw.DIM_CLIENTE (cliente_id, genero, loja_id, faixa_etaria, data_registo)
-SELECT DISTINCT
-       c.cliente_id,
+WITH clientes_union AS (
+    SELECT
+        c.cliente_id,
         c.genero,
         c.loja_id,
-        CASE
-            WHEN c.idade < 25 THEN '<25'
-            WHEN c.idade BETWEEN 25 AND 34 THEN '25-34'
-            WHEN c.idade BETWEEN 35 AND 44 THEN '35-44'
-            WHEN c.idade BETWEEN 45 AND 54 THEN '45-54'
-            WHEN c.idade BETWEEN 55 AND 64 THEN '55-64'
-            ELSE '65+'
-        END,
+        c.idade,
         c.data_registo
-FROM staging.clientes AS c;
+    FROM staging.clientes AS c
+
+    UNION ALL
+
+    SELECT DISTINCT
+        v.cliente_id,
+        CAST(NULL AS CHAR(1)) AS genero,
+        CAST(NULL AS INT) AS loja_id,
+        CAST(NULL AS INT) AS idade,
+        CAST(NULL AS DATE) AS data_registo
+    FROM staging.vendas AS v
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM staging.clientes AS c
+        WHERE c.cliente_id = v.cliente_id
+    )
+)
+INSERT INTO dw.DIM_CLIENTE (cliente_id, genero, loja_id, faixa_etaria, data_registo)
+SELECT DISTINCT
+       cu.cliente_id,
+       cu.genero,
+       cu.loja_id,
+       CASE
+            WHEN cu.idade IS NULL THEN 'Desconhecido'
+            WHEN cu.idade < 25 THEN '<25'
+            WHEN cu.idade BETWEEN 25 AND 34 THEN '25-34'
+            WHEN cu.idade BETWEEN 35 AND 44 THEN '35-44'
+            WHEN cu.idade BETWEEN 45 AND 54 THEN '45-54'
+            WHEN cu.idade BETWEEN 55 AND 64 THEN '55-64'
+            ELSE '65+'
+       END AS faixa_etaria,
+       cu.data_registo
+FROM clientes_union AS cu;
 
 CREATE TABLE dw.DIM_PRODUTO (
     produto_id        INT PRIMARY KEY,

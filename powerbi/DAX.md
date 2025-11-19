@@ -16,7 +16,7 @@ SUM ( 'dw FACT_VENDAS'[quantidade] )
 
 ```DAX
 Numero de Transacoes =
-DISTINCTCOUNT ( 'dw FACT_VENDAS'[venda_id] )
+DISTINCTCOUNT ( 'dw FACT_VENDAS'[transacao_id] )
 ```
 
 ```DAX
@@ -78,10 +78,10 @@ RETURN DIVIDE ( Atual - Anterior, Anterior )
 
 ```DAX
 Vendas Periodo Anterior :=
-VAR PeriodoAnterior =
-    PREVIOUSPERIOD ( 'dw DIM_DATA'[data] )
-RETURN
-    CALCULATE ( [Vendas Totais], PeriodoAnterior )
+CALCULATE (
+    [Vendas Totais],
+    DATEADD ( 'dw DIM_DATA'[data], -1, YEAR )
+)
 ```
 
 ```DAX
@@ -141,4 +141,34 @@ RETURN
 ```DAX
 Pareto 80/20 Classe =
 IF ( [Pareto 80/20 Acumulado] <= 0.8, "Top 80%", "Restante 20%" )
+```
+
+### Peak e Off-Peak
+
+```dax
+Peak OffPeak Status = 
+VAR VendasMes =
+    CALCULATE (
+        [Vendas Totais],
+        ALLEXCEPT ( 'dw DIM_DATA', 'dw DIM_DATA'[data])
+    )
+VAR MediaMensal =
+    CALCULATE (
+        AVERAGEX (
+            SUMMARIZE ( 'dw DIM_DATA', 'dw DIM_DATA'[data]),
+            CALCULATE ( [Vendas Totais] )
+        )
+    )
+RETURN
+    IF ( VendasMes >= MediaMensal, "Peak", "Off-peak" )
+```
+
+```dax
+Vendas Peak =
+IF ( [Peak OffPeak Status] = "Peak", [Vendas Totais], BLANK() )
+```
+
+```dax
+Vendas OffPeak =
+IF ( [Peak OffPeak Status] = "Off-peak", [Vendas Totais], BLANK() )
 ```

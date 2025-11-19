@@ -57,9 +57,7 @@ CREATE TABLE dw.DIM_CLIENTE (
     genero        CHAR(1)      NULL,
     loja_id       INT          NULL,
     faixa_etaria  VARCHAR(20)  NOT NULL,
-    data_registo  DATE         NULL,
-    CONSTRAINT FK_DIM_CLIENTE_DATA_REGISTRO FOREIGN KEY (data_registo)
-        REFERENCES dw.DIM_DATA(data)
+    data_registo  DATE         NULL
 );
 
 WITH clientes_union AS (

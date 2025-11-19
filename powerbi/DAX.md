@@ -1,134 +1,144 @@
-# Measures
+## Medidas DAX obrigatórias
 
-```dax
-Default Country = 
-IF (
-    HASONEVALUE('DIM_COUNTRY'[country_name]),
-    VALUES('DIM_COUNTRY'[country_name]),
-    "World"
+As medidas abaixo seguem os requisitos do documento `[10804]Projeto3.pdf` (pág. 6). As tabelas mantêm os nomes importados do SQL Server (`dw FACT_VENDAS`, `dw DIM_DATA`, `dw DIM_PRODUTO`, etc.).
+
+### Medidas base
+
+```DAX
+Vendas Totais =
+SUM ( 'dw FACT_VENDAS'[valor_total] )
+```
+
+```DAX
+Quantidade Vendida =
+SUM ( 'dw FACT_VENDAS'[quantidade] )
+```
+
+```DAX
+Numero de Transacoes =
+DISTINCTCOUNT ( 'dw FACT_VENDAS'[venda_id] )
+```
+
+```DAX
+Transacao Media =
+DIVIDE ( [Vendas Totais], [Numero de Transacoes] )
+```
+
+```DAX
+Margem de Lucro =
+SUMX (
+    'dw FACT_VENDAS',
+    'dw FACT_VENDAS'[quantidade]
+        * ( 'dw FACT_VENDAS'[preco_unitario] - 'dw FACT_VENDAS'[custo_unitario] )
 )
 ```
 
-```dax
-Industry Growth Last Year = 
-IF (
-    HASONEVALUE('DIM_COUNTRY'[id_country]),
-    CALCULATE(
-        MAX('CALC_EXP_2024'[growth_value_2023_2024_pct])
-    ),
-    CALCULATE(
-        MAX('CALC_EXP_2024'[growth_value_2023_2024_pct]),
-        'CALC_EXP_2024'[id_country] = 262
-    )
+### Time intelligence
+
+```DAX
+Vendas Ano Anterior =
+CALCULATE ( [Vendas Totais], DATEADD ( 'dw DIM_DATA'[data], -1, YEAR ) )
+```
+
+```DAX
+Crescimento YoY % =
+VAR Atual = [Vendas Totais]
+VAR Anterior = [Vendas Ano Anterior]
+RETURN DIVIDE ( Atual - Anterior, Anterior )
+```
+
+```DAX
+Vendas Mes Anterior =
+CALCULATE ( [Vendas Totais], DATEADD ( 'dw DIM_DATA'[data], -1, MONTH ) )
+```
+
+```DAX
+Crescimento MoM % =
+VAR Atual = [Vendas Totais]
+VAR Anterior = [Vendas Mes Anterior]
+RETURN DIVIDE ( Atual - Anterior, Anterior )
+```
+
+```DAX
+Vendas YTD =
+TOTALYTD ( [Vendas Totais], 'dw DIM_DATA'[data] )
+```
+
+```DAX
+Vendas Trimestre Anterior =
+CALCULATE ( [Vendas Totais], DATEADD ( 'dw DIM_DATA'[data], -1, QUARTER ) )
+```
+
+```DAX
+Crescimento QoQ % =
+VAR Atual = [Vendas Totais]
+VAR Anterior = [Vendas Trimestre Anterior]
+RETURN DIVIDE ( Atual - Anterior, Anterior )
+```
+
+```DAX
+Vendas Periodo Anterior :=
+VAR PeriodoAnterior =
+    PREVIOUSPERIOD ( 'dw DIM_DATA'[data] )
+RETURN
+    CALCULATE ( [Vendas Totais], PeriodoAnterior )
+```
+
+```DAX
+Media Movel 3M =
+AVERAGEX (
+    DATESINPERIOD ( 'dw DIM_DATA'[data], MAX ( 'dw DIM_DATA'[data] ), -3, MONTH ),
+    [Vendas Totais]
 )
 ```
 
-```dax
-Total Exports Ceramics 2024 = 
-IF (
-    HASONEVALUE('DIM_COUNTRY'[id_country]),
-    SUM('CALC_EXP_2024'[value_2024_usd]),
-    CALCULATE(
-        SUM('CALC_EXP_2024'[value_2024_usd]),
-        'CALC_EXP_2024'[id_country] = 262
-    )
+### Desempenho
+
+```DAX
+Ranking Produtos =
+RANKX (
+    ALL ( 'dw DIM_PRODUTO'[produto_id] ),
+    [Vendas Totais],
+    ,
+    DESC,
+    DENSE
 )
 ```
 
-```dax
-Country Rank by Exports = 
-VAR CountryList =
-    FILTER(
-        ALLSELECTED('DIM_COUNTRY'[country_name]),
-        'DIM_COUNTRY'[country_name] <> "World"
+```DAX
+Contribuicao Percentual =
+VAR TotalContexto =
+    CALCULATE ( [Vendas Totais], ALLSELECTED ( 'dw FACT_VENDAS' ) )
+RETURN
+    DIVIDE ( [Vendas Totais], TotalContexto )
+```
+
+```DAX
+Taxa de Crescimento =
+VAR Anterior = [Vendas Periodo Anterior]
+RETURN DIVIDE ( [Vendas Totais] - Anterior, Anterior )
+```
+
+```DAX
+Pareto 80/20 Acumulado =
+VAR TabelaProdutos =
+    ADDCOLUMNS (
+        ALL ( 'dw DIM_PRODUTO'[produto_id] ),
+        "@VendasProduto", CALCULATE ( [Vendas Totais] )
     )
-VAR RankValue =
-    RANKX(
-        CountryList,
-        [Total Exports 2024],
-        ,
-        DESC,
-        SKIP
+VAR RankingAtual =
+    RANKX ( TabelaProdutos, [@VendasProduto], CALCULATE ( [Vendas Totais] ), DESC, DENSE )
+VAR TotalVendas = SUMX ( TabelaProdutos, [@VendasProduto] )
+VAR VendasAcumuladas =
+    SUMX (
+        TOPN ( RankingAtual, TabelaProdutos, [@VendasProduto], DESC ),
+        [@VendasProduto]
     )
 RETURN
-IF(
-    SELECTEDVALUE('DIM_COUNTRY'[country_name]) = "World",
-    BLANK(),
-    RankValue
-)
+    DIVIDE ( VendasAcumuladas, TotalVendas )
 ```
 
-```dax
-Total Exports World 2024 = 
-IF (
-    HASONEVALUE('DIM_COUNTRY'[id_country]),
-    SUM('CALC_EXP_WORLD'[value_2024_usd]),
-    CALCULATE(
-        SUM('CALC_EXP_WORLD'[value_2024_usd]),
-        'CALC_EXP_WORLD'[id_country] = 262
-    )
-)
-```
-
-```dax
-Ceramics Share in Exports (%) = 
-VAR CountryID = SELECTEDVALUE ( 'DIM_COUNTRY'[id_country] )
-VAR CeramicsExports =
-    CALCULATE (
-        [Total Exports Ceramics 2024],
-        'CALC_EXP_WORLD'[id_country] = CountryID
-    )
-VAR CountryExports =
-    CALCULATE (
-        [Total Exports World 2024],
-        'CALC_EXP_WORLD'[id_country] = CountryID
-    )
-RETURN
-DIVIDE ( CeramicsExports, CountryExports, 0 )
-```
-
-```dax
-Share in Ceramics Exports (%) = 
-DIVIDE(
-    [Total Exports Ceramics 2024],
-    CALCULATE([Total Exports Ceramics 2024], ALL('DIM_COUNTRY')),
-    0
-)
-```
-
-```dax
-OutlierFlag = 
-VAR CurrentCluster =
-    MAX('Elbow_Silhouette_Method'[pib_urb_imports])
-
-VAR CountryAgg =
-    SUMMARIZE(
-        FILTER(
-            ALL('Elbow_Silhouette_Method'),
-            'Elbow_Silhouette_Method'[pib_urb_imports] = CurrentCluster
-        ),
-        'Elbow_Silhouette_Method'[country_name],
-        "AggValue", SUM('Elbow_Silhouette_Method'[value_2024_usd])
-    )
-
-VAR Q1 = PERCENTILEX.INC(CountryAgg, [AggValue], 0.25)
-VAR Q3 = PERCENTILEX.INC(CountryAgg, [AggValue], 0.75)
-VAR IQR = Q3 - Q1
-
-VAR LowerBound = Q1 - 1.5 * IQR
-VAR UpperBound = Q3 + 1.5 * IQR
-
-VAR CurrentValue =
-    CALCULATE(
-        SUM('Elbow_Silhouette_Method'[value_2024_usd]),
-        'Elbow_Silhouette_Method'[pib_urb_imports] = CurrentCluster
-    )
-
-RETURN
-    IF(
-        NOT ISBLANK(CurrentValue) &&
-        (CurrentValue < LowerBound || CurrentValue > UpperBound),
-        1,
-        0
-    )
+```DAX
+Pareto 80/20 Classe =
+IF ( [Pareto 80/20 Acumulado] <= 0.8, "Top 80%", "Restante 20%" )
 ```

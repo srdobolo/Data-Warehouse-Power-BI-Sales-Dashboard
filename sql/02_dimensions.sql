@@ -1,7 +1,7 @@
 USE [SalesDW];
 GO
-SET LANGUAGE Portuguese;
-SET NOCOUNT ON;
+SET LANGUAGE Portuguese; -- Define a linguagem para português para nomes de meses e dias da semana
+SET NOCOUNT ON; -- Evita mensagens desnecessárias de contagem de linhas afetadas
 
 DROP TABLE IF EXISTS dw.DIM_DATA;
 DROP TABLE IF EXISTS dw.DIM_LOJA;

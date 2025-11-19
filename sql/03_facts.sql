@@ -32,14 +32,14 @@ SELECT
     v.produto_id,
     DENSE_RANK() OVER (
         ORDER BY d.data_id, v.loja_id, v.cliente_id
-    ) AS transacao_id,
+    ) AS transacao_id, -- Gera um ID de transação único por combinação de data, loja e cliente
     p.stock_inicial,
     v.quantidade,
     v.preco_unitario,
     v.desconto_percentual,
     v.custo_unitario,
-    ISNULL(v.valor_total, v.quantidade * v.preco_unitario * (1 - v.desconto_percentual/100.0)) AS valor_total
-FROM staging.vendas AS v
-JOIN dw.DIM_DATA     AS d ON d.data = v.data_venda
-LEFT JOIN staging.produtos AS p ON p.produto_id = v.produto_id;
+    ISNULL(v.valor_total, v.quantidade * v.preco_unitario * (1 - v.desconto_percentual/100.0)) AS valor_total -- Calcula valor_total se estiver nulo
+FROM staging.vendas AS v -- Fonte de dados de vendas
+JOIN dw.DIM_DATA     AS d ON d.data = v.data_venda -- Junta com DIM_DATA para obter data_id
+LEFT JOIN staging.produtos AS p ON p.produto_id = v.produto_id; -- Junta com produtos para obter stock_inicial
 GO

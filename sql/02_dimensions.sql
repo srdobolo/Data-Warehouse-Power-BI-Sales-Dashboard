@@ -54,15 +54,21 @@ FROM staging.lojas;
 
 CREATE TABLE dw.DIM_CLIENTE (
     cliente_id    INT PRIMARY KEY,
-    genero        CHAR(1)      NULL,
-    loja_id       INT          NULL,
-    faixa_etaria  VARCHAR(20)  NOT NULL,
-    data_registo  DATE         NULL
+    nome          NVARCHAR(200) NULL,
+    email         NVARCHAR(200) NULL,
+    telefone      NVARCHAR(50)  NULL,
+    genero        CHAR(1)       NULL,
+    loja_id       INT           NULL,
+    faixa_etaria  VARCHAR(20)   NOT NULL,
+    data_registo  DATE          NULL
 );
 
 WITH clientes_union AS (
     SELECT
         c.cliente_id,
+        c.nome,
+        c.email,
+        c.telefone,
         c.genero,
         c.loja_id,
         c.idade,
@@ -73,6 +79,9 @@ WITH clientes_union AS (
 
     SELECT DISTINCT
         v.cliente_id,
+        CAST(NULL AS NVARCHAR(200)) AS nome,
+        CAST(NULL AS NVARCHAR(200)) AS email,
+        CAST(NULL AS NVARCHAR(50)) AS telefone,
         CAST(NULL AS CHAR(1)) AS genero,
         CAST(NULL AS INT) AS loja_id,
         CAST(NULL AS INT) AS idade,
@@ -84,9 +93,21 @@ WITH clientes_union AS (
         WHERE c.cliente_id = v.cliente_id
     )
 )
-INSERT INTO dw.DIM_CLIENTE (cliente_id, genero, loja_id, faixa_etaria, data_registo)
+INSERT INTO dw.DIM_CLIENTE (
+    cliente_id,
+    nome,
+    email,
+    telefone,
+    genero,
+    loja_id,
+    faixa_etaria,
+    data_registo
+)
 SELECT DISTINCT
        cu.cliente_id,
+       cu.nome,
+        cu.email,
+        cu.telefone,
        cu.genero,
        cu.loja_id,
        CASE

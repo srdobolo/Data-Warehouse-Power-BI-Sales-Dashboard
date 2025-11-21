@@ -27,7 +27,7 @@ SELECT
     desconto_percentual,
     custo_unitario,
     valor_total
-FROM SalesDB.dbo.vendas;
+FROM SalesDW.dbo.vendas;
 GO
 
 CREATE INDEX IX_staging_vendas_data     ON staging.vendas (data_venda);

@@ -80,3 +80,11 @@ https://www.youtube.com/watch?v=iZJz30LSik4
 ## Cohort
 
 https://www.youtube.com/watch?v=vbg4Je1tuis
+
+``dax
+First Order Date = 
+CALCULATE(
+    MIN('dw FACT_VENDAS'[data_id]),
+    ALLEXCEPT('dw FACT_VENDAS', 'dw FACT_VENDAS'[cliente_id])
+)
+```

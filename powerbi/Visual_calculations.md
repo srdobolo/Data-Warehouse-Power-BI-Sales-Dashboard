@@ -79,65 +79,11 @@ https://www.youtube.com/watch?v=iZJz30LSik4
 
 ## Cohort
 
-https://www.youtube.com/watch?v=vbg4Je1tuis
+https://youtu.be/Gs4PcNXFQwg?si=ccPr4LcPRMROHow7
 
-``dax
-First Order Date = 
-CALCULATE(
-    MIN('dw FACT_VENDAS'[data_id]),
-    ALLEXCEPT('dw FACT_VENDAS', 'dw FACT_VENDAS'[cliente_id])
-)
-```
+## Prophet
 
-## Time Intelligence (Vendas)
+https://medium.com/microsoft-power-bi/from-prediction-to-presentation-sales-forecasting-with-metas-prophet-and-power-bi-using-python-5c4d298f748e
 
-Assumindo que a tabela de datas `dw DIM_DATA` estA! marcada como Date Table e que o total bA!sico A(c):
+## ARIMA
 
-```dax
-Vendas Totais = SUM ( 'dw FACT_VENDAS'[valor_total] )
-```
-
-Medidas derivadas:
-
-```dax
-Vendas YTD =
-TOTALYTD (
-    [Vendas Totais],
-    'dw DIM_DATA'[data]
-)
-
-Vendas Ano Anterior =
-CALCULATE (
-    [Vendas Totais],
-    DATEADD ( 'dw DIM_DATA'[data], -1, YEAR )
-)
-
-Vendas Mes Anterior =
-CALCULATE (
-    [Vendas Totais],
-    DATEADD ( 'dw DIM_DATA'[data], -1, MONTH )
-)
-
-Vendas Trimestre Anterior =
-CALCULATE (
-    [Vendas Totais],
-    DATEADD ( 'dw DIM_DATA'[data], -1, QUARTER )
-)
-
-Crescimento YoY % =
-DIVIDE ( [Vendas Totais] - [Vendas Ano Anterior], [Vendas Ano Anterior] )
-
-Crescimento MoM % =
-DIVIDE ( [Vendas Totais] - [Vendas Mes Anterior], [Vendas Mes Anterior] )
-
-Media Movel 3M =
-AVERAGEX (
-    DATESINPERIOD ( 'dw DIM_DATA'[data], MAX ( 'dw DIM_DATA'[data] ), -3, MONTH ),
-    [Vendas Totais]
-)
-```
-
-Dicas de modelagem para evitar valores errados:
-- Use sempre a coluna de datas da tabela de datas (nA#o a do fato) nos eixos/segmentadores.
-- Garanta que nA#o hA! fendas de filtro removendo `dw DIM_DATA` (p.ex. com REMOVEFILTERS) antes de aplicar `DATEADD`.
-- Se o modelo tiver vendas futuras, considere limitar as medidas a `<= TODAY()` para evitar distorA'is.

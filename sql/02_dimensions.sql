@@ -59,6 +59,10 @@ CREATE TABLE dw.DIM_CLIENTE (
     telefone      NVARCHAR(50)  NULL,
     genero        CHAR(1)       NULL,
     loja_id       INT           NULL,
+    cidade        NVARCHAR(80)  NULL,
+    distrito      NVARCHAR(80)  NULL,
+    regiao        NVARCHAR(80)  NULL,
+    tipo_loja     NVARCHAR(30)  NULL,
     faixa_etaria  VARCHAR(20)   NOT NULL,
     data_registo  DATE          NULL
 );
@@ -100,6 +104,10 @@ INSERT INTO dw.DIM_CLIENTE (
     telefone,
     genero,
     loja_id,
+    cidade,
+    distrito,
+    regiao,
+    tipo_loja,
     faixa_etaria,
     data_registo
 )
@@ -110,6 +118,10 @@ SELECT DISTINCT
         cu.telefone,
        cu.genero,
        cu.loja_id,
+       l.cidade,
+       l.distrito,
+       l.regiao,
+       l.tipo AS tipo_loja,
        CASE
             WHEN cu.idade IS NULL THEN 'Desconhecido'
             WHEN cu.idade < 25 THEN '<25'
@@ -120,7 +132,9 @@ SELECT DISTINCT
             ELSE '65+'
        END AS faixa_etaria,
        cu.data_registo
-FROM clientes_union AS cu;
+FROM clientes_union AS cu
+LEFT JOIN staging.lojas AS l
+       ON l.loja_id = cu.loja_id;
 
 CREATE TABLE dw.DIM_PRODUTO (
     produto_id        INT PRIMARY KEY,

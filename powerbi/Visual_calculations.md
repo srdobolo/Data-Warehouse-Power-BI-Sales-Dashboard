@@ -79,6 +79,17 @@ https://www.youtube.com/watch?v=iZJz30LSik4
 
 ## Cohort
 
+```dax
+PrimeiraEncomenda =
+EOMONTH(
+    CALCULATE(
+        MIN('dw FACT_VENDAS'[data])
+    ),
+    0
+)
+```
+
+https://www.youtube.com/watch?v=m7piRI8yjDc
 https://youtu.be/Gs4PcNXFQwg?si=ccPr4LcPRMROHow7
 
 ## Prophet

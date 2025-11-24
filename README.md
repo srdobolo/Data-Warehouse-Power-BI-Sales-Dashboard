@@ -1,5 +1,7 @@
 ﻿# Sales Data Warehouse & Power BI Dashboard
 
+imgs
+
 ## 1. Resumo Executivo
 
 Este repositório documenta, ponta a ponta, a construção de um mini data warehouse para a cadeia fictícia **TechSolutions** (retalho de eletrónica) e a entrega de dashboards em Power BI. Inclui geração de dados sintéticos (20 lojas, ~1,5k clientes, ~200 produtos, ~1,3M linhas de vendas 2020-2025), infraestrutura em Docker com SQL Server, pipeline ETL/ELT em Python + T-SQL, modelo dimensional em estrela e artefactos de Power BI (medidas DAX, cálculos visuais, scripts Python avançados e ficheiros `.pbix`).

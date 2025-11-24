@@ -1,6 +1,10 @@
 ﻿# Sales Data Warehouse & Power BI Dashboard
 
-imgs
+| ![Executive Summary](img/executive_summary.png) | ![Análise Temporal](img/Análise_Temporal.png) |
+| --- | --- |
+| ![Análise Produtos](img/Análise_Produtos.png) | ![Análise Geográfica](img/Análise_Geográfica.png) |
+| --- | --- |
+| ![Análise Demográfica](img/Análise_Demográfica.png) | ![Análise Preditiva e Insights](img/Analise_Preditiva_Insights.png) |
 
 ## 1. Resumo Executivo
 
